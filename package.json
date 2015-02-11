@@ -11,15 +11,19 @@
     "type": "git",
     "url": "https://github.com/beytu/gulp-typescript-filesort.git"
   },
+  
   "author": "beytu <node-packages@gunduz.fr>",
   "license": "MIT",
+
   "engines": {
     "node": ">= 0.10"
   },
+
   "keywords": [
     "gulp",
-    "typescript",
+    "typescript"
   ],
+
   "devDependencies": {
     "chai": "^1.10.0",
     "gulp": "^3.8.11",
