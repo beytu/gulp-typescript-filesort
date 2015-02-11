@@ -6,7 +6,12 @@
   "scripts": {
     "test": "mocha"
   },
-  "author": "beytu",
+  
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/beytu/gulp-typescript-filesort.git"
+  },
+  "author": "beytu <node-packages@gunduz.fr>",
   "license": "MIT",
   "devDependencies": {
     "chai": "^1.10.0",
