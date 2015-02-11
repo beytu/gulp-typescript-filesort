@@ -14,7 +14,7 @@ var gulpTypescriptFilesort = function() {
 	// /!\ if you have a lot of files, it can have a big impact on your memory usage
 	var fileReferenceMap = {};
 
-	
+
 	var toposortEdges = [];
 
 
@@ -24,10 +24,11 @@ var gulpTypescriptFilesort = function() {
 		var dependencies = file.contents.toString().match(/<reference path=.*\/>/g);
 		if (dependencies) {
 			dependencies.forEach(function(dependency) {
+				var seperator = '"';
 				if (dependency.indexOf('"')<0) {
-					this.emit("error", new gutil.PluginError(PLUGIN_NAME, "your reference path definition don't contain any \". "));
+					seperator = "'";
 				}
-				var cleanedDependency = dependency.substring(dependency.indexOf('"')+1,dependency.lastIndexOf('"'));
+				var cleanedDependency = dependency.substring(dependency.indexOf(seperator)+1,dependency.lastIndexOf(seperator));
 
 				//rebuild the full path of the dep
 				cleanedDependency = path.join(path.dirname(file.path),cleanedDependency);
@@ -37,7 +38,7 @@ var gulpTypescriptFilesort = function() {
 				}
 
 				toposortEdges.push([file.path, cleanedDependency]);
-			});
+			}.bind(this));
 		}
 		else {
 			gutil.log("No dependency found for " + file.path);
