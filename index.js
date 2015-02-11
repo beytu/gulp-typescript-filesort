@@ -83,6 +83,7 @@ var gulpTypescriptFilesort = function() {
 	//Storing files in this map. For each key (the file path), we store the file
 	// /!\ if you have a lot of files, it can have a big impact on your memory usage
 	var fileReferenceMap = {};
+	var dependenciesList = {};
 
 
 	var toposortEdges = [];
@@ -93,6 +94,8 @@ var gulpTypescriptFilesort = function() {
 		//Extract all dependencies from the content
 		var dependencies = file.contents.toString().match(/<reference path=.*\/>/g);
 		if (dependencies) {
+			dependenciesList[file.path] = [];
+			gutil.log(" =>" + file.path);
 			dependencies.forEach(function(dependency) {
 				var seperator = '"';
 				if (dependency.indexOf('"')<0) {
@@ -106,8 +109,14 @@ var gulpTypescriptFilesort = function() {
 				if (cleanedDependency.indexOf('.ts') < 0) {
 					cleanedDependency = cleanedDependency + ".ts";
 				}
-
-				toposortEdges.push([file.path, cleanedDependency]);
+				dependenciesList[file.path].push(cleanedDependency);
+				if (dependenciesList[cleanedDependency] && dependenciesList[cleanedDependency].indexOf(file.path)>=0) {
+					gutil.log("/!\\ You have a circular dependecy between " + cleanedDependency + " and " + file.path + ". skipping to avoid a crash of toposort");
+				}
+				else {
+					gutil.log("\t\t pushing dep " + cleanedDependency);
+					toposortEdges.push([file.path, cleanedDependency]);
+				}
 			}.bind(this));
 		}
 		else {
