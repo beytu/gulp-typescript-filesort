@@ -29,4 +29,16 @@ describe("typescript filesort", function() {
 		});
 
 	});
+
+	it(
+		"should work even with a reference file which will introduce a cyclec dependency",
+		function(done) {
+			gulp.src('test/dataset2/**/*.ts')
+			.pipe(tsFilesort())
+			.pipe(gulp.dest("tmp/"))
+			.on('end', function() {
+				done();
+			});
+		}
+	);
 })
