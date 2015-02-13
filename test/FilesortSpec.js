@@ -9,7 +9,7 @@ describe("typescript filesort", function() {
 
 		var resultArray = [];
 
-		gulp.src('test/dataset/**/*.ts')
+		gulp.src('test/dataset1/**/*.ts')
 		.pipe(tsFilesort())
 		.on('data', function(file) {
 
@@ -33,10 +33,20 @@ describe("typescript filesort", function() {
 	it(
 		"should work even with a reference file which will introduce a cyclec dependency",
 		function(done) {
+
+			var resultArray = [];
+
 			gulp.src('test/dataset2/**/*.ts')
 			.pipe(tsFilesort())
-			.pipe(gulp.dest("tmp/"))
+			.on('data', function(file) {
+				resultArray.push(file.relative);
+			})
 			.on('end', function() {
+				resultArray.indexOf('core/Core.ts').should.be.above(resultArray.indexOf('core/ICore.ts'));
+				resultArray.indexOf('module1/Module1.ts').should.be.above(resultArray.indexOf('core/Core.ts'));
+				resultArray.indexOf('module2/Module2.ts').should.be.above(resultArray.indexOf('module1/Module1.ts'));
+				resultArray.indexOf('module2/Module2.ts').should.be.above(resultArray.indexOf('util/Math.ts'));
+				resultArray.indexOf('module2/Module2.ts').should.be.below(resultArray.indexOf('amodule/amodule.ts'));
 				done();
 			});
 		}

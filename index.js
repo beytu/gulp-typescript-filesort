@@ -1,150 +1,64 @@
 var eventStream = require('event-stream');
 var gutil = require('gulp-util');
-var File = require('vinyl');
 var path = require('path');
-var toposort = require('toposort');
+var typescript = require('typescript');
 
 var PLUGIN_NAME = "gulp-typescript-filesort"
 
-
-var gulpTypescriptFilesort = function() {
-
- 
-	//Storing files in this map. For each key (the file path), we store the file
-	// /!\ if you have a lot of files, it can have a big impact on your memory usage
-	var fileReferenceMap = {};
+var defaultOptions = {
+    verbose:false
+};
 
 
-	var toposortEdges = [];
+var gulpTypescriptFilesort = function (givenOptions) {
+
+  var options = givenOptions || defaultOptions;
+
+  var filesToHandle = {};
+
+  var tsOpts = {}
 
 
-	var onFile = function(file) {
+  var onFile = function (file) {
+      var filePath = path.normalize(file.path);
+      if (options.verbose) {
+          gutil.log('pushing  ' + filePath + ' into the map');
+      }
+      filesToHandle[filePath] = file;
 
-		//Extract all dependencies from the content
-		var dependencies = file.contents.toString().match(/<reference path=.*\/>/g);
-		if (dependencies) {
-			dependencies.forEach(function(dependency) {
-				var seperator = '"';
-				if (dependency.indexOf('"')<0) {
-					seperator = "'";
-				}
-				var cleanedDependency = dependency.substring(dependency.indexOf(seperator)+1,dependency.lastIndexOf(seperator));
-
-				//rebuild the full path of the dep
-				cleanedDependency = path.join(path.dirname(file.path),cleanedDependency);
-
-				if (cleanedDependency.indexOf('.ts') < 0) {
-					cleanedDependency = cleanedDependency + ".ts";
-				}
-
-				toposortEdges.push([file.path, cleanedDependency]);
-			}.bind(this));
-		}
-		else {
-			gutil.log("No dependency found for " + file.path);
-		}
-		fileReferenceMap[file.path] = file;
-
-	}
+  };
 
 
-	var onEnd = function() {
-		var result = toposort(toposortEdges).reverse();
-		result.forEach(function(filePath) {
-			if (fileReferenceMap[filePath]) {
-				gutil.log('emitting ' + filePath);
-				this.emit('data',fileReferenceMap[filePath]);
-			}
-			else {
-				gutil.log('no file found in the reference map for ' + filePath + ', skipping');
-			}
-		}.bind(this));
-		this.emit('end');
+  var onEnd = function () {
+    var host = typescript.createCompilerHost(tsOpts);
+    var program = typescript.createProgram(Object.keys(filesToHandle),tsOpts, host);
 
-	}
+    program.getSourceFiles();
 
-	return eventStream.through(onFile,onEnd);
-}
+    var result = program.getSourceFiles();
+    
+    if (options.verbose) {
+        gutil.log("retrieved " + result.length + " files");
+    }
+    
+    result.forEach(function (sourceFile) {
+        if (options.verbose) {
+            gutil.log('emitting ' + path.normalize(sourceFile.filename));
+      }
+      if (filesToHandle[path.normalize(sourceFile.filename)]) {
+        this.emit('data', filesToHandle[path.normalize(sourceFile.filename)]);
+      }
+      else if(options.verbose) {
+        gutil.log("skipping, file not found in my file handler map");
+      }
 
+    }.bind(this));
 
-module.exports = gulpTypescriptFilesort;
-var eventStream = require('event-stream');
-var gutil = require('gulp-util');
-var File = require('vinyl');
-var path = require('path');
-var toposort = require('toposort');
+    this.emit('end');
+  };
 
-var PLUGIN_NAME = "gulp-typescript-filesort"
-
-
-var gulpTypescriptFilesort = function() {
-
- 
-	//Storing files in this map. For each key (the file path), we store the file
-	// /!\ if you have a lot of files, it can have a big impact on your memory usage
-	var fileReferenceMap = {};
-	var dependenciesList = {};
-
-
-	var toposortEdges = [];
-
-
-	var onFile = function(file) {
-
-		//Extract all dependencies from the content
-		var dependencies = file.contents.toString().match(/<reference path=.*\/>/g);
-		if (dependencies) {
-			dependenciesList[file.path] = [];
-			gutil.log(" =>" + file.path);
-			dependencies.forEach(function(dependency) {
-				var seperator = '"';
-				if (dependency.indexOf('"')<0) {
-					seperator = "'";
-				}
-				var cleanedDependency = dependency.substring(dependency.indexOf(seperator)+1,dependency.lastIndexOf(seperator));
-
-				//rebuild the full path of the dep
-				cleanedDependency = path.join(path.dirname(file.path),cleanedDependency);
-
-				if (cleanedDependency.indexOf('.ts') < 0) {
-					cleanedDependency = cleanedDependency + ".ts";
-				}
-				dependenciesList[file.path].push(cleanedDependency);
-				if (dependenciesList[cleanedDependency] && dependenciesList[cleanedDependency].indexOf(file.path)>=0) {
-					gutil.log("/!\\ You have a circular dependecy between " + cleanedDependency + " and " + file.path + ". skipping to avoid a crash of toposort");
-				}
-				else {
-					gutil.log("\t\t pushing dep " + cleanedDependency);
-					toposortEdges.push([file.path, cleanedDependency]);
-				}
-			}.bind(this));
-		}
-		else {
-			gutil.log("No dependency found for " + file.path);
-		}
-		fileReferenceMap[file.path] = file;
-	}
-
-	
-
-
-	var onEnd = function() {
-		var result = toposort(toposortEdges).reverse();
-		result.forEach(function(filePath) {
-			if (fileReferenceMap[filePath]) {
-				gutil.log('emitting ' + filePath);
-				this.emit('data',fileReferenceMap[filePath]);
-			}
-			else {
-				gutil.log('no file found in the reference map for ' + filePath + ', skipping');
-			}
-		}.bind(this));
-		this.emit('end');
-
-	}
-
-	return eventStream.through(onFile,onEnd);
-}
+  return eventStream.through(onFile, onEnd);
+};
 
 
 module.exports = gulpTypescriptFilesort;
