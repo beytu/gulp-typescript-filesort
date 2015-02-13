@@ -16,9 +16,9 @@ var gulpTypescriptFilesort = function (givenOptions) {
 
   var filesToHandle = {};
 
-  var tsOpts = {}
+  var tsOpts = {};
 
-
+  //Store each file into the filesToHandle map.
   var onFile = function (file) {
       var filePath = path.normalize(file.path);
       if (options.verbose) {
@@ -42,7 +42,7 @@ var gulpTypescriptFilesort = function (givenOptions) {
     }
     
     result.forEach(function (sourceFile) {
-        if (options.verbose) {
+      if (options.verbose) {
             gutil.log('emitting ' + path.normalize(sourceFile.filename));
       }
       if (filesToHandle[path.normalize(sourceFile.filename)]) {
