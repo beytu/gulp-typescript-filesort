@@ -9,8 +9,14 @@ This is a simple gulp plugin which sort TS files using the Typescript compiler A
 
 npm install gulp-typescript-filesort
 
+# Options
+
+- options.verbose : The plugin will output which files it encoutered and whih file it emit (including the order)
+- options.compiler : you can provide options to the Typescript compiler
+
 # Usage
 
+## The file list as a json format
 Use with gulp-filelist, you can produce a file containing a list of ordered TS files :
 
 ```
@@ -28,3 +34,5 @@ gulp.task('ts-filelist', function() {
 });
 
 ```
+
+

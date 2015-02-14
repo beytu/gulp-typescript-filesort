@@ -1,7 +1,7 @@
 {
   "name": "gulp-typescript-filesort",
-  "version": "0.0.3",
-  "description": "Sort TypeScript files using the provided references",
+  "version": "0.0.4",
+  "description": "Sort TypeScript files using the TS parser",
   "main": "index.js",
   "scripts": {
     "test": "mocha"
@@ -29,6 +29,6 @@
   "dependencies": {
     "event-stream": "3.2.2",
     "gulp-util": "3.0.3",
-    "typescript": "1.4.1"
+    "typescript-filesort": "0.0.1"
   }
 }

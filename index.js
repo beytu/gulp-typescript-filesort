@@ -1,22 +1,31 @@
 var eventStream = require('event-stream');
 var gutil = require('gulp-util');
 var path = require('path');
-var typescript = require('typescript');
+var tsFilesort = require('typescript-filesort');
 
 var PLUGIN_NAME = "gulp-typescript-filesort"
 
 var defaultOptions = {
-    verbose:false
+  verbose:false,
+  compiler: {
+    noLib:true
+  }
 };
 
 
 var gulpTypescriptFilesort = function (givenOptions) {
 
-  var options = givenOptions || defaultOptions;
 
+  var options =  givenOptions || defaultOptions;
+
+
+  /**
+   * Will store each file you given using the glob using 
+   * filesToHandle[<file path>] = <file>
+   * in case of  huge number of files, it will eat a lot of RAM
+   */
   var filesToHandle = {};
 
-  var tsOpts = {};
 
   //Store each file into the filesToHandle map.
   var onFile = function (file) {
@@ -30,23 +39,23 @@ var gulpTypescriptFilesort = function (givenOptions) {
 
 
   var onEnd = function () {
-    var host = typescript.createCompilerHost(tsOpts);
-    var program = typescript.createProgram(Object.keys(filesToHandle),tsOpts, host);
+    options.files = Object.keys(filesToHandle);
 
-    program.getSourceFiles();
-
-    var result = program.getSourceFiles();
+    //retrieve sorted files
+    var result = tsFilesort(options);
     
     if (options.verbose) {
         gutil.log("retrieved " + result.length + " files");
     }
     
+
     result.forEach(function (sourceFile) {
-      if (options.verbose) {
-            gutil.log('emitting ' + path.normalize(sourceFile.filename));
-      }
-      if (filesToHandle[path.normalize(sourceFile.filename)]) {
-        this.emit('data', filesToHandle[path.normalize(sourceFile.filename)]);
+      
+      if (filesToHandle[sourceFile]) {
+        if (options.verbose) {
+            gutil.log('emitting ' + sourceFile);
+        }
+        this.emit('data', filesToHandle[sourceFile]);
       }
       else if(options.verbose) {
         gutil.log("skipping, file not found in my file handler map");

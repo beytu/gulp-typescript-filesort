@@ -37,7 +37,7 @@ describe("typescript filesort", function() {
 			var resultArray = [];
 
 			gulp.src('test/dataset2/**/*.ts')
-			.pipe(tsFilesort())
+			.pipe(tsFilesort({}))
 			.on('data', function(file) {
 				resultArray.push(file.relative);
 			})
